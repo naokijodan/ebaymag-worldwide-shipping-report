@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マグ送料ゼロ問題の調査報告</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: single centered column (max 880px), full-width scroll boxes for tables and diagrams; cards only for the three options. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#f4f6fa; --fg:#18202e; --muted:#566074; --line:#cfd6e2;
+  --accent:#0f6b73; --accent-bg:#dcedee;
+  --bad:#a63d3d; --bad-bg:#f6e1e0;
+  --ok:#2c7a4b; --ok-bg:#dff0e5;
+  --warn:#946200; --warn-bg:#f8ecd0;
+  --focus:#0f6b73;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151d; --surface:#171e29; --surface2:#1e2733; --fg:#e6eaf1; --muted:#9aa5b8; --line:#2f3b4d;
+    --accent:#5cc0c9; --accent-bg:#17353a;
+    --bad:#e58a87; --bad-bg:#3a2020;
+    --ok:#74c995; --ok-bg:#1b3325;
+    --warn:#e6bb62; --warn-bg:#392c11;
+    --focus:#5cc0c9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151d; --surface:#171e29; --surface2:#1e2733; --fg:#e6eaf1; --muted:#9aa5b8; --line:#2f3b4d;
+  --accent:#5cc0c9; --accent-bg:#17353a;
+  --bad:#e58a87; --bad-bg:#3a2020;
+  --ok:#74c995; --ok-bg:#1b3325;
+  --warn:#e6bb62; --warn-bg:#392c11;
+  --focus:#5cc0c9;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Zen Kaku Gothic New",system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:16px;line-height:1.8;overflow-x:hidden}
+.wrap{max-width:880px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{text-wrap:balance;line-height:1.4;margin:0}
+h1{font-size:1.75rem;font-weight:700}
+h2{font-size:1.3rem;font-weight:700;margin-top:48px;padding-bottom:6px;border-bottom:2px solid var(--accent)}
+h3{font-size:1.05rem;font-weight:700;margin-top:24px}
+p,li{max-width:65ch}
+p{margin:12px 0}
+ul,ol{padding-left:1.4em;margin:12px 0}
+li{margin:6px 0}
+.meta{color:var(--muted);font-size:.9rem;margin-top:8px}
+.num,td.n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible,summary:focus-visible,.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.summary{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--accent);padding:16px 20px;margin-top:24px}
+.summary h2{font-size:1.05rem;border:0;margin:0 0 4px;padding:0}
+.summary ol{margin:8px 0 0}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem;line-height:1.6}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--surface2);font-weight:700}
+tr:last-child td{border-bottom:0}
+.chip{display:inline-block;font-size:.75rem;font-weight:700;line-height:1.5;padding:0 8px;border-radius:999px;border:1px solid;white-space:nowrap;vertical-align:baseline}
+.c-unk{color:var(--warn);background:var(--warn-bg);border-color:var(--warn)}
+.c-bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad)}
+.c-ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok)}
+.c-fact{color:var(--accent);background:var(--accent-bg);border-color:var(--accent)}
+.note{background:var(--surface2);border:1px solid var(--line);padding:10px 14px;font-size:.92rem;margin:16px 0}
+.key{background:var(--warn-bg);border:1px solid var(--warn);padding:12px 16px;margin:20px 0;font-weight:500}
+.key p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-top:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);padding:16px 18px}
+.card.b{border-top-color:var(--muted)}
+.card h3{margin-top:0}
+.card p,.card li{font-size:.94rem}
+svg{display:block;width:100%;height:auto;min-width:640px}
+svg text{font-family:"Zen Kaku Gothic New",system-ui,"Hiragino Sans",sans-serif;font-size:14px;fill:var(--fg)}
+svg .sm{font-size:12px;fill:var(--muted)}
+svg .b{font-weight:700}
+.l{fill:var(--surface2);stroke:var(--line);stroke-width:1.2}
+.lb{fill:var(--bad-bg);stroke:var(--bad);stroke-width:1.5}
+.lw{fill:var(--warn-bg);stroke:var(--warn);stroke-width:1.5}
+.lo{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.5}
+.pn{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.ar{fill:none;stroke:var(--muted);stroke-width:2}
+.ah{fill:var(--muted);stroke:var(--muted)}
+.tb{fill:var(--bad)} .to{fill:var(--ok)}
+svg text.tb{fill:var(--bad)} svg text.to{fill:var(--ok)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;min-width:0}
+.big{background:var(--surface2);border:1px solid var(--line);padding:12px 16px;text-align:center}
+.big b{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:2rem;line-height:1.3}
+.big span{font-size:.85rem;color:var(--muted)}
+.big.after b{color:var(--accent)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:16px 0;padding:0;list-style:none}
+.flow li{margin:0;max-width:none;flex:1 1 150px;background:var(--surface);border:1px solid var(--line);padding:10px 12px;font-size:.9rem;line-height:1.6;position:relative}
+.flow li+li::before{content:"\2192";position:absolute;left:-14px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700}
+.flow li.last{border-color:var(--warn);background:var(--warn-bg)}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
+footer p{max-width:65ch}
+@media (max-width:520px){.cmp{grid-template-columns:1fr}h1{font-size:1.45rem}.flow li+li::before{display:none}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+<h1>マグ送料ゼロ問題の調査報告</h1>
+<p class="meta">2026年10月21日 調査 / 対象: クーリエ中古（xp_used）ポリシー / きっかけ: 受講者からの問い合わせ（MAGで同期すると追加送料が反映されない）</p>
+<p class="meta">表記: <span class="chip c-fact">確認済み</span> は実際の読み取りや試験で確かめた内容、<span class="chip c-unk">未確認</span> はまだ確かめていない内容です。MAG（マグ）は eBaymag のことです。</p>
+</header>
+
+<section class="summary" aria-labelledby="sum">
+<h2 id="sum">結論</h2>
+<ol>
+<li>クーリエ中古のポリシーには「Worldwide $0」の行があり、MAGで同期するとヨーロッパ各国の送料が$0になります（問い合わせの指摘は正しいです）。</li>
+<li>Worldwide（全世界）を「アメリカ大陸・アジア・オーストラリア・メキシコ」に置き換えると解消できる見込みです。サブ1件で試験済みで、届かなくなる国はニュージーランドのみです。</li>
+<li>ただし元のポリシーを直しても、MAGには自動で反映されません。各利用者がMAGで「Resync（元のポリシーを取り込み直す操作）」を押すなどの作業が必要です。</li>
+</ol>
+</section>
+
+<h2>1. 現在の状態</h2>
+<div class="scroll" tabindex="0" role="region" aria-label="ポリシーの種類ごとの状態">
+<table>
+<thead><tr><th>ポリシーの種類</th><th>メイン</th><th>サブ</th><th>送料の行</th><th>状態</th></tr></thead>
+<tbody>
+<tr><td>クーリエ中古（xp_used 低価格帯）</td><td class="n">30件</td><td class="n">29件</td><td>Worldwide $0 / ヨーロッパ $7 / フランス $10 / イギリス $0 / メキシコ(Standard) $0</td><td><span class="chip c-bad">問題あり</span></td></tr>
+<tr><td>Flat</td><td class="n">10件</td><td class="n">0件</td><td>Worldwide $0 / ヨーロッパ $27 / フランス $30 / イギリス $0</td><td><span class="chip c-bad">問題あり</span> 同じ形</td></tr>
+<tr><td>ゲームエコノミーDDP</td><td class="n">1件</td><td class="n">0件</td><td>Worldwide $0 / ヨーロッパ $27 / フランス $30 / イギリス $0 / ドイツ $13</td><td><span class="chip c-bad">問題あり</span> 同じ形</td></tr>
+<tr><td>中古エコノミー・ゲーム中古</td><td colspan="2">-</td><td>Worldwideなし。1行目が「アメリカ大陸・アジア・オーストラリア・メキシコ」$0 / イギリス $0 / フランス / ヨーロッパ</td><td><span class="chip c-ok">正常</span> 追加送料がMAGに写る</td></tr>
+<tr><td>Worldwide $0 だけのもの（クーリエ新品、クーリエ中古の高価格帯、ゲーム新品など）</td><td class="n">218件</td><td class="n">217件</td><td>Worldwide $0 のみ</td><td>影響なし（追加送料がもともと無いため）</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">クーリエのポリシーは送料の行が5本で、1ポリシーの上限（5本）に達しています。行を足して直すことはできません。</p>
+
+<h2>2. 不具合の中身（MAGで何が起きるか）</h2>
+<ul>
+<li><span class="chip c-fact">確認済み</span> サブの xp_used_0032・0016 から作られたMAGの各国版（ドイツ・フランス・イタリア・スペイン・オーストラリア・カナダ）は、すべて送料0でした。$7/$10は入っていません。10/17の+$3前の値（$4/$7）でもありません。</li>
+<li><span class="chip c-fact">確認済み</span> 中古エコノミーの各国版は、ドイツ・フランス・イタリア・スペインが €8.83（約$10）、イギリスが £7.54 で、ヨーロッパの追加送料が写っています（ただし+$3前の古い値です）。</li>
+</ul>
+<h3>仕組み</h3>
+<p>eBay Japan のMAG解説資料（表紙にドラフトと記載あり）によると、次のとおりです。</p>
+<ul>
+<li>MAGは国ごとに「その国に届く配送の行」をすべて集めます。</li>
+<li>同じ種類（速達同士など）の行が重なると、安い1つにまとめます。</li>
+<li>Worldwideの行は、すべての国に届く行として扱われます。</li>
+<li>クーリエ中古は全部「速達（SpeedPAK Expedited）」です。ドイツでは Worldwide $0 と ヨーロッパ $7 が重なり、安い $0 が残ります。</li>
+<li>中古エコノミーは1行目がヨーロッパを含みません。ドイツに届くのはヨーロッパの行だけなので、その送料が写ります。</li>
+</ul>
+<h3>補足</h3>
+<ul>
+<li>MAGの各国版は、国ごとに送料が1つです。フランス専用の料金は使われず、安いほうのヨーロッパの料金になります（中古エコノミーのフランス版もヨーロッパの料金でした）。</li>
+<li>今あるMAGの各国版は+$3前の値のままです。MAGは元ポリシーの変更を自動では取り込みません。</li>
+</ul>
+
+<h3>図A: MAGがドイツ向けの送料を決める流れ</h3>
+<div class="scroll" tabindex="0" role="region" aria-label="図A 横にスクロールできます">
+<svg viewBox="0 0 960 440" role="img" aria-labelledby="ta da">
+<title id="ta">MAGがドイツ向けの送料を決める流れ</title>
+<desc id="da">左は現在のクーリエ中古で、Worldwide $0 が残りドイツは$0になる。右は中古エコノミーで、ヨーロッパの送料が入る。</desc>
+<rect class="pn" x="10" y="10" width="460" height="420" rx="6" style="fill:var(--surface)"/>
+<rect class="pn" x="490" y="10" width="460" height="420" rx="6" style="fill:var(--surface)"/>
+<text class="b" x="30" y="40">今のクーリエ中古</text>
+<text class="b" x="510" y="40">中古エコノミー（Worldwideなし）</text>
+
+<rect class="lb" x="30" y="56" width="420" height="38" rx="4"/><text x="44" y="80">Worldwide $0（速達）</text>
+<rect class="lw" x="30" y="100" width="420" height="38" rx="4"/><text x="44" y="124">ヨーロッパ $7（速達）</text>
+<rect class="l" x="30" y="144" width="420" height="38" rx="4"/><text x="44" y="168">フランス $10（速達）</text>
+<rect class="l" x="30" y="188" width="420" height="38" rx="4"/><text x="44" y="212">イギリス $0</text>
+
+<rect class="l" x="510" y="56" width="420" height="38" rx="4"/><text x="524" y="80">アメリカ大陸・アジア・AU・MX $0</text>
+<rect class="l" x="510" y="100" width="420" height="38" rx="4"/><text x="524" y="124">イギリス $0</text>
+<rect class="l" x="510" y="144" width="420" height="38" rx="4"/><text x="524" y="168">フランス</text>
+<rect class="lo" x="510" y="188" width="420" height="38" rx="4"/><text x="524" y="212">ヨーロッパ</text>
+
+<path class="ar" d="M240 232 L240 256"/><path class="ah" d="M233 254 L247 254 L240 266 Z"/>
+<path class="ar" d="M720 232 L720 256"/><path class="ah" d="M713 254 L727 254 L720 266 Z"/>
+
+<text x="30" y="290">ドイツに届く行: Worldwide $0 と</text>
+<text x="30" y="310">ヨーロッパ $7（どちらも速達）</text>
+<text class="sm" x="30" y="334">同じ種類は安いほうだけ残す</text>
+<text x="510" y="290">ドイツに届く行: ヨーロッパだけ</text>
+<text class="sm" x="510" y="334">重なる行がないので、そのまま写る</text>
+
+<rect class="lb" x="30" y="356" width="420" height="56" rx="4"/>
+<text class="b tb" x="44" y="380">ドイツ: $0</text><text class="sm" x="44" y="400">追加送料が消える</text>
+<rect class="lo" x="510" y="356" width="420" height="56" rx="4"/>
+<text class="b to" x="524" y="380">ドイツ: ヨーロッパの送料が入る</text><text class="sm" x="524" y="400">追加送料が写る</text>
+</svg>
+</div>
+
+<h2>3. 解消する方法の候補</h2>
+<div class="cards">
+<article class="card">
+<h3>案A Worldwideを地域指定に置き換える</h3>
+<p>中古エコノミーと同じ方式です。Worldwideの行を「アメリカ大陸・アジア・オーストラリア・メキシコ」$0 に変更します。他の行・除外設定はそのままで、行数は5本のままです。</p>
+<p><span class="chip c-fact">確認済み</span> 試験結果（サブ xp_used_0032、1件のみ）</p>
+<ul>
+<li>eBayが受け付けました。変わったのはその行の宛先だけです。</li>
+<li>Copy（複製ポリシー）は作られていません。</li>
+<li>出品をReviseしなくても、新しい設定が効きました。</li>
+</ul>
+</article>
+<article class="card b">
+<h3>案B MAG側で国ごとに個別調整</h3>
+<p>MAGの「Adjust shipping policy on international site」（各国サイトの配送ポリシーを調整する画面）で、各国サイトの送料を手で入れます。</p>
+<p>元のポリシーは変えません。手間は大きくなります。</p>
+</article>
+</div>
+
+<h3>案Aの場合の、買い手の国から見た送料</h3>
+<div class="scroll" tabindex="0" role="region" aria-label="買い手の国別の送料">
+<table>
+<thead><tr><th>買い手の国</th><th>送料</th></tr></thead>
+<tbody>
+<tr><td>アラブ首長国連邦・サウジアラビア・イスラエル・カタール・クウェート</td><td class="n">$0</td></tr>
+<tr><td>タイ・シンガポール・韓国・オーストラリア・カナダ・イギリス</td><td class="n">$0</td></tr>
+<tr><td>メキシコ</td><td class="n">$0（Standardも表示）</td></tr>
+<tr><td>ドイツ・イタリア</td><td class="n">$7</td></tr>
+<tr><td>フランス</td><td class="n">$10</td></tr>
+<tr><td>ニュージーランド</td><td>表示なし（送れない）</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">試験で分かったこと: 中東・オセアニアを地域として指定する書き換えは、eBayが受け付けませんでした（エラー）。eBayの公式の一覧でも、配送先に指定できる地域は Worldwide・アメリカ大陸・アジア・ヨーロッパの4つと、一部の国だけです（中東・オセアニア・アフリカは一覧にありません）。eBayの分類では、中東はアジアの中に入っています。</p>
+
+<h3>図B: 届く国の変化（案A、xp_used_0032の除外設定で計算）</h3>
+<div class="scroll" role="region" aria-label="図B 届く国の変化">
+<div class="cmp">
+<div class="big"><span>今</span><b>88か国</b></div>
+<div class="big after"><span>案A</span><b>87か国</b></div>
+</div>
+<table>
+<thead><tr><th>地域</th><th>今</th><th>案A</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td>アメリカ大陸（カナダ・メキシコ）</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-ok">届く</span></td><td></td></tr>
+<tr><td>アジア（東南アジア・韓国など）</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-ok">届く</span></td><td></td></tr>
+<tr><td>中東</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-ok">届く</span></td><td>アジアに含まれる</td></tr>
+<tr><td>オーストラリア</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-ok">届く</span></td><td></td></tr>
+<tr><td>ヨーロッパ・イギリス・フランス</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-ok">届く</span></td><td>$7/$10は維持</td></tr>
+<tr><td>ニュージーランド</td><td><span class="chip c-ok">届く</span></td><td><span class="chip c-bad">届かない</span></td><td>減るのはここだけ</td></tr>
+<tr><td>アフリカ・南米・中米</td><td><span class="chip c-unk" style="color:var(--muted);background:var(--surface2);border-color:var(--line)">届かない</span></td><td><span class="chip c-unk" style="color:var(--muted);background:var(--surface2);border-color:var(--line)">届かない</span></td><td>もともと除外</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note"><span class="chip c-unk">未確認</span> 他のクーリエ中古58件の除外設定が、試験した1件と同じかどうかは確かめていません。</p>
+
+<h2>4. MAGへの反映（どの案でも作業が必要）</h2>
+<p>元のポリシーを直しても、MAGには自動で反映されません。反映の手段は3つあります。</p>
+<ol>
+<li><strong>MAGで「Resync」ボタンを押す</strong>（利用者の手作業・ポリシーごと）。送料を打ち直す必要はなく、元ポリシーの内容を取り込み直します。公式の機能ガイドとeBay Japan資料に記載があります。 <span class="chip c-unk">未確認</span> 本当に取り込まれるかは確かめていません。</li>
+<li><strong>MAGで国ごとに手入力</strong>（案B）。いちばん手間がかかります。</li>
+<li><strong>AIがeBay公式APIで直接書き換える</strong>。MAGが各国サイトに作ったポリシーをAPIで書き換え、出品を1件ずつReviseします。送料が変わることは10/02に実証済みです。ただしMAGの画面は古い数字のまま残り、食い違います。 <span class="chip c-unk">未確認</span> その後MAGでResyncなどを押したときに上書きされるかは確かめていません。利用者のアカウントで行うには、各利用者の許可（API接続）が必要です。MAG画面をAIがブラウザで操作する方法は、ルールで禁止のため使いません。</li>
+</ol>
+<div class="key"><p>どの手段でも、元のポリシーを直すことが前提です。①は元を取り込み直す仕組みなので、元がWorldwideのままだとResyncしても$0になります。</p></div>
+
+<h3>図C: 案Aの反映の流れ</h3>
+<ol class="flow" aria-label="反映の流れ">
+<li>元ポリシーを修正（案A）</li>
+<li>各利用者がEAGLEで同期</li>
+<li>MAGでResync</li>
+<li class="last">各国サイトの送料に反映 <span class="chip c-unk">未確認</span></li>
+</ol>
+
+<h2>5. 弊害</h2>
+<h3>案A</h3>
+<ul>
+<li>ニュージーランドに送れなくなります（eBayの配送先リストに無いため、国単位でも追加できません）。</li>
+<li>利用者にEAGLE同期とMAGでのResyncの作業が必要です。</li>
+<li>MAGのフランス版は、ヨーロッパの料金になります。</li>
+<li>対象はクーリエ中古59件です。Flat・ゲームエコノミーDDPの11件（メインのみ）を含めるかは未決定です。</li>
+</ul>
+<h3>案B</h3>
+<ul>
+<li>ポリシーごと・国ごとの手入力で、手間が大きくなります。</li>
+<li>本体を変えるたびにMAG側も同じ作業が必要です（二重管理）。</li>
+</ul>
+
+<h2>6. まだ分かっていないこと</h2>
+<ul>
+<li><span class="chip c-unk">未確認</span> 案Aのあと、MAGでResyncを押すと、ヨーロッパ各国版に$7等が本当に入るか</li>
+<li><span class="chip c-unk">未確認</span> 他のクーリエ中古58件の除外設定が、試験した1件と同じか</li>
+<li><span class="chip c-unk">未確認</span> Flat・ゲームエコノミーDDPを対象に含めるか（判断待ち）</li>
+</ul>
+
+<h2>7. 現在の状態（試験の後始末）</h2>
+<p>サブの xp_used_0032（Egl_2511-0194-0207_xp_used_0032）は、試験で案Aの形に書き換えたままです。元に戻すための控えは保存済みです。</p>
+
+<footer>
+<p>根拠: eBay公式API（Account API・Trading API GeteBayDetails・Browse API）の読み取り結果、eBay Japan「eBaymag 新シッピングポリシー完全ガイド 2026M07」（ドラフト）、eBaymag 公式ヘルプ（Feature Guide）。</p>
+<p>Feature Guide: <a href="https://help.ebaymag.com/en/articles/16050276-feature-guide">https://help.ebaymag.com/en/articles/16050276-feature-guide</a></p>
+</footer>
+</div>
+</body>
+</html>
